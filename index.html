@@ -430,7 +430,7 @@ footer{
               <tr>
                 <th>Period</th>
                 <th>Interest (₹)</th>
-                <th>Cumulative Amount (₹)</th>
+                <th>Closing Balance (₹)</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -538,11 +538,11 @@ function calculate() {
   const rows        = [];
 
   if (interestType === 'si') {
-    // 1-1 saal ka pure breakdown bina principal badle
+    // ── SIMPLE INTEREST (SI) BREAKDOWN ──
     let runningInterest = 0;
 
     for (let i = 1; i <= years; i++) {
-      const int = (principal * rate) / 100; // Har saal interest sirf main principal par hi nikalega
+      const int = (principal * rate) / 100; // Sirf mool principal par interest
       runningInterest += int;
       rows.push({ label: `Year ${i}`, interest: int, amount: principal + runningInterest });
     }
@@ -567,28 +567,62 @@ function calculate() {
     document.getElementById('ci-note').style.display = 'none';
 
   } else {
-    // Compound Interest Section
+    // ── COMPOUND INTEREST (CI) BREAKDOWN ──
     const n = parseInt(document.getElementById('compound-freq').value);
-    const t = totalDays / 365;
-    finalAmount   = principal * Math.pow(1 + rate / (100 * n), n * t);
+    const freqLabel = {1:'Annually',2:'Semi-annually',4:'Quarterly',12:'Monthly',365:'Daily'}[n];
+    
+    let currentPrincipal = principal;
+    
+    // 1-1 saal ka compound breakdown
+    for (let i = 1; i <= years; i++) {
+      const amountAfterYear = currentPrincipal * Math.pow(1 + rate / (100 * n), n * 1);
+      const int = amountAfterYear - currentPrincipal;
+      currentPrincipal = amountAfterYear; // agle saal ke liye balance update
+      rows.push({ label: `Year ${i}`, interest: int, amount: currentPrincipal });
+    }
+    
+    // Bache hue mahino (Months) ka compounding update
+    if (months > 0) {
+      const tMonths = months / 12;
+      const amountAfterMonths = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tMonths);
+      const int = amountAfterMonths - currentPrincipal;
+      currentPrincipal = amountAfterMonths;
+      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: currentPrincipal });
+    }
+    
+    // Bache hue dino (Days) ka compounding update
+    if (days > 0) {
+      const tDays = days / 365;
+      const amountAfterDays = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tDays);
+      const int = amountAfterDays - currentPrincipal;
+      currentPrincipal = amountAfterDays;
+      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: currentPrincipal });
+    }
+    
+    // Agar period sirf kuch dino ka hi ho (no years, no months)
+    if (rows.length === 0) {
+      const tDays = totalDays / 365;
+      currentPrincipal = principal * Math.pow(1 + rate / (100 * n), n * tDays);
+      const int = currentPrincipal - principal;
+      rows.push({ label: `${totalDays} Days`, interest: int, amount: currentPrincipal });
+    }
+
+    finalAmount = currentPrincipal;
     totalInterest = finalAmount - principal;
 
-    const freqLabel = {1:'Annually',2:'Semi-annually',4:'Quarterly',12:'Monthly',365:'Daily'}[n];
-    rows.push({ label: `Full period (${freqLabel})`, interest: totalInterest, amount: finalAmount });
-
     document.getElementById('ci-note').textContent =
-      `CI Formula: A = P(1 + R/n)^(n×t) — P=${fmt(principal)}, R=${rate}%, n=${n} (${freqLabel}), t=${t.toFixed(4)} years`;
+      `CI Formula: A = P(1 + R/n)^(n×t) — P=${fmt(principal)}, R=${rate}%, Compounding: ${freqLabel}`;
     document.getElementById('ci-note').style.display = 'block';
   }
 
-  // Rows ko table mein append karna
-  rows.forEach((r, idx) => {
+  // Table mein rows insert karna
+  rows.forEach((r) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${r.label}</td><td>₹${fmt(r.interest)}</td><td>₹${fmt(r.amount)}</td>`;
     tbody.appendChild(tr);
   });
 
-  // Extra Row: Jo Total summary ko saaf breakdown karke dikhaye
+  // Final Total Summary Row (Agar 1 se zyada rows hain)
   if (rows.length > 1) {
     const totalTr = document.createElement('tr');
     totalTr.classList.add('highlight-row');
@@ -598,6 +632,7 @@ function calculate() {
     tbody.rows[0].classList.add('highlight-row');
   }
 
+  // Top summary widgets card update
   document.getElementById('r-principal').textContent = '₹' + fmt(principal);
   document.getElementById('r-interest').textContent  = '₹' + fmt(totalInterest);
   document.getElementById('r-total').textContent     = '₹' + fmt(finalAmount);
