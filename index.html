@@ -2,108 +2,666 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Interest Calculator (Updated)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interest Calculator — SI & CI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial,sans-serif;max-width:900px;margin:20px auto;padding:20px}
-input,select,button{padding:8px;margin:4px;width:100%}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-table{width:100%;border-collapse:collapse;margin-top:15px}
-th,td{border:1px solid #ccc;padding:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0f172a;
+  --surface:#1e293b;
+  --surface2:#263448;
+  --border:#334155;
+  --text:#f1f5f9;
+  --muted:#94a3b8;
+  --accent:#6366f1;
+  --accent2:#8b5cf6;
+  --green:#10b981;
+  --green-bg:rgba(16,185,129,0.1);
+  --blue:#3b82f6;
+  --blue-bg:rgba(59,130,246,0.1);
+  --amber:#f59e0b;
+  --amber-bg:rgba(245,158,11,0.1);
+  --red:#ef4444;
+  --radius:14px;
+  --radius-sm:8px;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:0 0 60px;
+}
+
+.hero{
+  background:linear-gradient(135deg,#1e1b4b 0%,#0f172a 50%,#1a0533 100%);
+  padding:48px 20px 40px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+
+.hero::before{
+  content:'';
+  position:absolute;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%);
+  top:-100px;left:50%;transform:translateX(-50%);
+  pointer-events:none;
+}
+
+.hero-badge{
+  display:inline-block;
+  background:rgba(99,102,241,0.15);
+  border:1px solid rgba(99,102,241,0.3);
+  color:#a5b4fc;
+  font-size:11px;font-weight:600;
+  letter-spacing:0.08em;text-transform:uppercase;
+  padding:5px 14px;border-radius:20px;
+  margin-bottom:16px;
+}
+
+.hero h1{
+  font-family:'Playfair Display',serif;
+  font-size:38px;font-weight:700;
+  background:linear-gradient(135deg,#e0e7ff,#a5b4fc,#c4b5fd);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:10px;line-height:1.2;
+}
+
+.hero p{font-size:15px;color:var(--muted);}
+
+.container{max-width:640px;margin:0 auto;padding:0 16px;}
+
+.section{margin-top:24px;}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  margin-bottom:16px;
+}
+
+.card-label{
+  font-size:11px;font-weight:600;
+  letter-spacing:0.07em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+
+.card-label::before{
+  content:'';display:inline-block;
+  width:3px;height:14px;
+  background:var(--accent);border-radius:2px;
+}
+
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+
+.field label{
+  display:block;font-size:13px;font-weight:500;
+  color:var(--muted);margin-bottom:7px;
+}
+
+.field input,.field select{
+  width:100%;padding:11px 14px;
+  font-size:14px;font-family:inherit;
+  color:var(--text);
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+}
+
+.field input:focus,.field select:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+}
+
+.field input::placeholder{color:#475569;}
+.field select option{background:#1e293b;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+.type-toggle{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;border:1px solid var(--border);
+  border-radius:var(--radius-sm);overflow:hidden;
+  margin-bottom:14px;
+}
+
+.type-toggle button{
+  padding:10px;font-size:13px;font-weight:500;
+  font-family:inherit;border:none;cursor:pointer;
+  background:var(--surface2);color:var(--muted);
+  transition:all 0.15s;
+}
+
+.type-toggle button.active{
+  background:var(--accent);color:#fff;
+}
+
+.btn-calc{
+  width:100%;padding:13px;
+  font-size:15px;font-weight:600;font-family:inherit;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:var(--radius-sm);
+  cursor:pointer;transition:opacity 0.15s,transform 0.1s;
+  letter-spacing:0.01em;
+}
+
+.btn-calc:hover{opacity:0.92;}
+.btn-calc:active{transform:scale(0.99);}
+
+.error{
+  font-size:13px;color:var(--red);
+  background:rgba(239,68,68,0.1);
+  border:1px solid rgba(239,68,68,0.25);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;display:none;margin-bottom:12px;
+}
+
+.result-section{display:none;}
+
+.summary-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;margin-bottom:20px;
+}
+
+.stat{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px 12px;text-align:center;
+}
+
+.stat-label{
+  font-size:11px;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.05em;
+  color:var(--muted);margin-bottom:8px;
+}
+
+.stat-val{
+  font-size:16px;font-weight:700;
+  color:var(--text);word-break:break-all;
+}
+
+.stat-val.green{color:var(--green);}
+.stat-val.blue{color:var(--blue);}
+.stat-val.amber{color:var(--amber);}
+
+.duration-badge{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);
+  border-radius:var(--radius-sm);padding:10px 14px;
+  font-size:13px;color:#a5b4fc;
+  margin-bottom:20px;
+}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+
+thead th{
+  padding:9px 12px;text-align:left;
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.05em;
+  color:var(--muted);
+  border-bottom:1px solid var(--border);
+}
+
+tbody td{
+  padding:10px 12px;
+  border-bottom:1px solid rgba(51,65,85,0.5);
+  color:var(--text);
+}
+
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(255,255,255,0.03);}
+
+.highlight-row td{
+  color:var(--green);font-weight:600;
+  background:var(--green-bg);
+}
+
+.highlight-row:hover td{background:var(--green-bg)!important;}
+
+.table-wrap{
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+}
+
+.btn-print{
+  width:100%;padding:12px;
+  font-size:14px;font-weight:600;font-family:inherit;
+  background:transparent;
+  color:var(--green);
+  border:1px solid var(--green);
+  border-radius:var(--radius-sm);
+  cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:16px;
+}
+
+.btn-print:hover{background:var(--green-bg);}
+
+.ci-note{
+  font-size:12px;color:var(--muted);
+  background:var(--amber-bg);
+  border:1px solid rgba(245,158,11,0.2);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;margin-top:14px;
+}
+
+footer{
+  text-align:center;margin-top:40px;
+  font-size:12px;color:#475569;
+  padding:0 16px;
+}
+
+/* ── PRINT STYLES ── */
+@media print{
+  body{background:#fff;color:#000;padding:0;}
+  .hero,.no-print{display:none!important;}
+  .card{
+    background:#fff;border:1px solid #ddd;
+    border-radius:0;padding:16px;margin-bottom:12px;
+    break-inside:avoid;
+  }
+  .result-section{display:block!important;}
+  .stat{background:#f8f8f8;border:1px solid #ddd;}
+  .stat-val{color:#000!important;}
+  .stat-val.green{color:#059669!important;}
+  .stat-val.blue{color:#1d4ed8!important;}
+  .stat-val.amber{color:#d97706!important;}
+  table{font-size:12px;}
+  thead th{color:#555;}
+  tbody td{color:#111;border-bottom:1px solid #eee;}
+  .highlight-row td{color:#059669!important;background:#ecfdf5!important;}
+  .btn-print,.type-toggle,.btn-calc,.field input,.field select,.error,.card-label::before{display:none!important;}
+  .duration-badge{background:#f0f0ff;border:1px solid #c7d2fe;color:#3730a3;}
+  .table-wrap{border:1px solid #ddd;}
+  .print-header{display:block!important;}
+  .ci-note{background:#fffbeb;border:1px solid #fde68a;color:#92400e;}
+}
+
+.print-header{
+  display:none;
+  text-align:center;
+  padding:16px 0 12px;
+  border-bottom:2px solid #1e1b4b;
+  margin-bottom:20px;
+}
+
+.print-header h2{font-size:20px;font-weight:700;color:#1e1b4b;}
+.print-header p{font-size:12px;color:#555;margin-top:4px;}
+.print-footer{display:none;}
+
+@media print{
+  .print-footer{
+    display:block;
+    text-align:center;
+    margin-top:32px;
+    padding-top:12px;
+    border-top:1px solid #ddd;
+    font-size:11px;color:#888;
+  }
+}
+
+@media(max-width:480px){
+  .hero h1{font-size:28px;}
+  .summary-grid{grid-template-columns:1fr 1fr;}
+  .summary-grid .stat:last-child{grid-column:1/-1;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
-<h2>Interest Calculator (Updated)</h2>
 
-<div class="grid">
-<div><label>Name</label><input id="name"></div>
-<div><label>Principal</label><input id="principal" type="number"></div>
-<div><label>Rate %</label><input id="rate" type="number" step="0.01"></div>
-<div><label>Type</label>
-<select id="type">
-<option value="si">Simple Interest</option>
-<option value="ci">Compound Interest</option>
-</select></div>
-<div><label>Start Date</label><input id="start" type="date"></div>
-<div><label>End Date</label><input id="end" type="date"></div>
-<div><label>Compounding</label>
-<select id="freq">
-<option value="1">Annual</option>
-<option value="2">Semi Annual</option>
-<option value="4">Quarterly</option>
-<option value="12">Monthly</option>
-<option value="365">Daily</option>
-</select></div>
+<div class="print-header" id="print-header">
+  <h2>Interest Calculation Report</h2>
+  <p id="print-date-line"></p>
 </div>
 
-<button onclick="calc()">Calculate</button>
+<div class="hero no-print">
+  <div class="hero-badge">Financial Calculator</div>
+  <h1>Interest Calculator</h1>
+  <p>Simple Interest &amp; Compound Interest — with date-based calculation</p>
+</div>
 
-<h3 id="summary"></h3>
-<table>
-<thead><tr><th>Period</th><th>Interest</th><th>Balance</th></tr></thead>
-<tbody id="tb"></tbody>
-</table>
+<div class="container">
+  <div class="section">
+
+    <div class="card no-print">
+      <div class="card-label">Borrower / Account Details</div>
+
+      <div class="field">
+        <label>Account Holder Name</label>
+        <input type="text" id="name" placeholder="e.g. Ramesh Kumar">
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Principal Amount (₹)</label>
+          <input type="number" id="principal" placeholder="e.g. 50000" min="0">
+        </div>
+        <div class="field">
+          <label>Rate of Interest (% per year)</label>
+          <input type="number" id="rate" placeholder="e.g. 8" min="0" step="0.01">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Start Date</label>
+          <input type="date" id="start-date">
+        </div>
+        <div class="field">
+          <label>End Date</label>
+          <input type="date" id="end-date">
+        </div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-label">Interest Type</div>
+      <div class="type-toggle">
+        <button class="active" id="btn-si" onclick="setType('si')">Simple Interest (SI)</button>
+        <button id="btn-ci" onclick="setType('ci')">Compound Interest (CI)</button>
+      </div>
+
+      <div id="ci-options" style="display:none;">
+        <div class="field">
+          <label>Compounding Frequency</label>
+          <select id="compound-freq">
+            <option value="1">Annually (once a year)</option>
+            <option value="2">Semi-annually (every 6 months)</option>
+            <option value="4" selected>Quarterly (every 3 months)</option>
+            <option value="12">Monthly</option>
+            <option value="365">Daily</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="error" id="err"></div>
+      <button class="btn-calc" onclick="calculate()">Calculate Interest ↗</button>
+    </div>
+
+    <div class="result-section" id="result-section">
+
+      <div class="card">
+        <div class="card-label">Summary</div>
+
+        <div id="account-info" style="margin-bottom:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;display:none;">
+          <span style="color:var(--muted)">Account Holder: </span>
+          <span id="r-name" style="font-weight:600;color:var(--text)"></span>
+        </div>
+
+        <div class="duration-badge">
+          <span>📅</span>
+          <span id="r-duration"></span>
+        </div>
+
+        <div class="summary-grid">
+          <div class="stat">
+            <div class="stat-label">Principal</div>
+            <div class="stat-val" id="r-principal">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Total Interest</div>
+            <div class="stat-val green" id="r-interest">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Final Amount</div>
+            <div class="stat-val blue" id="r-total">—</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>Interest (₹)</th>
+                <th>Closing Balance (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="ci-note" id="ci-note" style="display:none;"></div>
+
+        <button class="btn-print no-print" onclick="printResult()">
+          🖨️ Print / Save as PDF
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="print-footer">
+  <p>Generated on <span id="pf-date"></span> &nbsp;|&nbsp; Developer: Rakesh Kumar Dudhawal</p>
+</div>
+
+<footer class="no-print">
+  <p>Developer: <strong style="color:var(--muted)">Rakesh Kumar Dudhawal</strong></p>
+  <p style="margin-top:4px;">SI = PRT/100, Amount = P(1 + RT) &nbsp;|&nbsp; CI = P(1 + R/n)^(nt)</p>
+</footer>
 
 <script>
-function fmt(x){return x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
+let interestType = 'si';
 
-function daysBetween(a,b){
- return Math.floor((b-a)/(1000*60*60*24));
+function setType(t) {
+  interestType = t;
+  document.getElementById('btn-si').classList.toggle('active', t === 'si');
+  document.getElementById('btn-ci').classList.toggle('active', t === 'ci');
+  document.getElementById('ci-options').style.display = t === 'ci' ? 'block' : 'none';
 }
 
-function calc(){
- let P=parseFloat(principal.value);
- let R=parseFloat(rate.value);
- if(isNaN(P)||P<=0){alert("Invalid principal");return;}
- if(isNaN(R)||R<0){alert("Invalid rate");return;}
-
- let s=new Date(start.value);
- let e=new Date(end.value);
- if(!(s<e)){alert("Invalid dates");return;}
-
- let days=daysBetween(s,e);
- let tbody=document.getElementById("tb");
- tbody.innerHTML="";
-
- if(type.value==="si"){
-   let I=P*R*days/36500;
-   let A=P+I;
-   summary.textContent=`SI Interest ₹${fmt(I)} | Final Amount ₹${fmt(A)} | ${days} days`;
-   tbody.innerHTML=`<tr><td>${days} Days</td><td>₹${fmt(I)}</td><td>₹${fmt(A)}</td></tr>`;
- }else{
-   let n=parseInt(freq.value);
-   let t=days/365.2425;
-   let balance=P;
-   let periodYears=1/n;
-   let totalPeriods=Math.floor(t*n);
-
-   for(let i=1;i<=totalPeriods;i++){
-      let newBal=balance*(1+R/(100*n));
-      let interest=newBal-balance;
-      balance=newBal;
-
-      let label=(n==1)?`Year ${i}`:
-                (n==2)?`Half-Year ${i}`:
-                (n==4)?`Quarter ${i}`:
-                (n==12)?`Month ${i}`:
-                `Period ${i}`;
-
-      tbody.innerHTML+=`<tr><td>${label}</td><td>₹${fmt(interest)}</td><td>₹${fmt(balance)}</td></tr>`;
-   }
-
-   let remaining=t-totalPeriods/n;
-   if(remaining>0){
-      let newBal=balance*Math.pow(1+R/(100*n),n*remaining);
-      let interest=newBal-balance;
-      balance=newBal;
-      tbody.innerHTML+=`<tr><td>Remaining Fraction</td><td>₹${fmt(interest)}</td><td>₹${fmt(balance)}</td></tr>`;
-   }
-
-   let A=P*Math.pow(1+R/(100*n),n*t);
-   let I=A-P;
-   summary.textContent=`CI Interest ₹${fmt(I)} | Final Amount ₹${fmt(A)} | ${days} days`;
- }
+function fmt(n) {
+  return Number(n.toFixed(2)).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
+
+function dateDiff(start, end) {
+  const ms = end - start;
+  const totalDays = Math.floor(ms / (1000 * 60 * 60 * 24));
+
+  let years = 0, months = 0, days = 0;
+  let d = new Date(start);
+
+  while (true) {
+    const next = new Date(d);
+    next.setFullYear(next.getFullYear() + 1);
+    if (next <= end) { years++; d = next; } else break;
+  }
+  while (true) {
+    const next = new Date(d);
+    next.setMonth(next.getMonth() + 1);
+    if (next <= end) { months++; d = next; } else break;
+  }
+  days = Math.floor((end - d) / (1000 * 60 * 60 * 24));
+
+  return { years, months, days, totalDays };
+}
+
+function showErr(msg) {
+  const e = document.getElementById('err');
+  e.textContent = msg; e.style.display = 'block';
+}
+function hideErr() { document.getElementById('err').style.display = 'none'; }
+
+function calculate() {
+  hideErr();
+  const nameVal    = document.getElementById('name').value.trim();
+  const principal  = parseFloat(document.getElementById('principal').value);
+  const rate       = parseFloat(document.getElementById('rate').value);
+  const startStr   = document.getElementById('start-date').value;
+  const endStr     = document.getElementById('end-date').value;
+
+  if (!principal || principal <= 0) { showErr('Enter a valid principal amount.'); return; }
+  if (isNaN(rate) || rate < 0)           { showErr('Enter a valid rate of interest.'); return; }
+  if (!startStr)                     { showErr('Please select a start date.'); return; }
+  if (!endStr)                       { showErr('Please select an end date.'); return; }
+
+  const startDate = new Date(startStr);
+  const endDate   = new Date(endStr);
+  if (endDate <= startDate)         { showErr('End date must be after start date.'); return; }
+
+  const { years, months, days, totalDays } = dateDiff(startDate, endDate);
+
+  let durationStr = '';
+  if (years  > 0) durationStr += `${years} Year${years > 1 ? 's' : ''} `;
+  if (months > 0) durationStr += `${months} Month${months > 1 ? 's' : ''} `;
+  if (days   > 0) durationStr += `${days} Day${days > 1 ? 's' : ''}`;
+  durationStr = durationStr.trim() + ` (${totalDays} days total)`;
+
+  const startFmt = startDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const endFmt   = endDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  document.getElementById('r-duration').textContent =
+    `${startFmt} → ${endFmt} · ${durationStr}`;
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+
+  let totalInterest = 0;
+  let finalAmount   = 0;
+  const rows        = [];
+
+  if (interestType === 'si') {
+    // ── SIMPLE INTEREST (SI) BREAKDOWN ──
+    let runningInterest = 0;
+
+    for (let i = 1; i <= years; i++) {
+      const int = (principal * rate) / 100; // Sirf mool principal par interest
+      runningInterest += int;
+      rows.push({ label: `Year ${i}`, interest: int, amount: principal + runningInterest });
+    }
+    if (months > 0) {
+      const int = (principal * rate * months) / (100 * 12);
+      runningInterest += int;
+      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: principal + runningInterest });
+    }
+    if (days > 0) {
+      const int = (principal * rate * days) / (100 * 365);
+      runningInterest += int;
+      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: principal + runningInterest });
+    }
+    if (rows.length === 0) {
+      const int = (principal * rate * totalDays) / (100 * 365);
+      runningInterest = int;
+      rows.push({ label: `${totalDays} Days`, interest: int, amount: principal + runningInterest });
+    }
+    
+    totalInterest = runningInterest;
+    finalAmount = principal + totalInterest;
+    document.getElementById('ci-note').style.display = 'none';
+
+  } else {
+    // ── COMPOUND INTEREST (CI) BREAKDOWN ──
+    const n = parseInt(document.getElementById('compound-freq').value);
+    const freqLabel = {1:'Annually',2:'Semi-annually',4:'Quarterly',12:'Monthly',365:'Daily'}[n];
+    
+    let currentPrincipal = principal;
+    
+    // 1-1 saal ka compound breakdown
+    for (let i = 1; i <= years; i++) {
+      const amountAfterYear = currentPrincipal * Math.pow(1 + rate / (100 * n), n * 1);
+      const int = amountAfterYear - currentPrincipal;
+      currentPrincipal = amountAfterYear; // agle saal ke liye balance update
+      rows.push({ label: `Year ${i}`, interest: int, amount: currentPrincipal });
+    }
+    
+    // Bache hue mahino (Months) ka compounding update
+    if (months > 0) {
+      const tMonths = months / 12;
+      const amountAfterMonths = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tMonths);
+      const int = amountAfterMonths - currentPrincipal;
+      currentPrincipal = amountAfterMonths;
+      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: currentPrincipal });
+    }
+    
+    // Bache hue dino (Days) ka compounding update
+    if (days > 0) {
+      const tDays = days / 365;
+      const amountAfterDays = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tDays);
+      const int = amountAfterDays - currentPrincipal;
+      currentPrincipal = amountAfterDays;
+      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: currentPrincipal });
+    }
+    
+    // Agar period sirf kuch dino ka hi ho (no years, no months)
+    if (rows.length === 0) {
+      const tDays = totalDays / 365;
+      currentPrincipal = principal * Math.pow(1 + rate / (100 * n), n * tDays);
+      const int = currentPrincipal - principal;
+      rows.push({ label: `${totalDays} Days`, interest: int, amount: currentPrincipal });
+    }
+
+    finalAmount = currentPrincipal;
+    totalInterest = finalAmount - principal;
+
+    document.getElementById('ci-note').textContent =
+      `CI Formula: A = P(1 + R/n)^(n×t) — P=${fmt(principal)}, R=${rate}%, Compounding: ${freqLabel}`;
+    document.getElementById('ci-note').style.display = 'block';
+  }
+
+  // Table mein rows insert karna
+  rows.forEach((r) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.label}</td><td>₹${fmt(r.interest)}</td><td>₹${fmt(r.amount)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Final Total Summary Row (Agar 1 se zyada rows hain)
+  if (rows.length > 1) {
+    const totalTr = document.createElement('tr');
+    totalTr.classList.add('highlight-row');
+    totalTr.innerHTML = `<td><strong>Total Breakdown</strong></td><td><strong>₹${fmt(totalInterest)}</strong></td><td><strong>₹${fmt(finalAmount)}</strong></td>`;
+    tbody.appendChild(totalTr);
+  } else if (rows.length === 1) {
+    tbody.rows[0].classList.add('highlight-row');
+  }
+
+  // Top summary widgets card update
+  document.getElementById('r-principal').textContent = '₹' + fmt(principal);
+  document.getElementById('r-interest').textContent  = '₹' + fmt(totalInterest);
+  document.getElementById('r-total').textContent     = '₹' + fmt(finalAmount);
+
+  const nameBox = document.getElementById('account-info');
+  if (nameVal) {
+    document.getElementById('r-name').textContent = nameVal;
+    nameBox.style.display = 'block';
+  } else {
+    nameBox.style.display = 'none';
+  }
+
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('result-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function printResult() {
+  const now = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('print-date-line').textContent = 'Generated on ' + now;
+  document.getElementById('pf-date').textContent = now;
+  document.getElementById('print-header').style.display = 'block';
+  window.print();
+  document.getElementById('print-header').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('end-date').value = today;
 </script>
 </body>
 </html>
