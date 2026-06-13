@@ -610,8 +610,22 @@ function calculate() {
     finalAmount = currentPrincipal;
     totalInterest = finalAmount - principal;
 
-    document.getElementById('ci-note').textContent =
-      `CI Formula: A = P(1 + R/n)^(n×t) — P=${fmt(principal)}, R=${rate}%, Compounding: ${freqLabel}`;
+    const timeYears = ((endDate - startDate) / (1000 * 60 * 60 * 24) / 365).toFixed(4);
+
+document.getElementById('ci-note').innerHTML = ` <strong>Compound Interest Details</strong><br><br>
+
+Principal (P): ₹${fmt(principal)}<br>
+Rate (R): ${rate}% per annum<br>
+Compounding Frequency: ${freqLabel}<br>
+Time (t): ${timeYears} years<br><br>
+
+Formula:<br>
+A = P(1 + R/n)<sup>nt</sup><br><br>
+
+Applied Formula:<br>
+A = ${fmt(principal)} × (1 + ${rate}/(100 × ${n}))<sup>${n} × ${timeYears}</sup>
+`;
+
     document.getElementById('ci-note').style.display = 'block';
   }
 
