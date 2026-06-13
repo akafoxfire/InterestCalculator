@@ -583,22 +583,56 @@ function calculate() {
     
     // Bache hue mahino (Months) ka compounding update
     if (months > 0) {
-      const tMonths = months / 12;
-      const amountAfterMonths = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tMonths);
-      const int = amountAfterMonths - currentPrincipal;
-      currentPrincipal = amountAfterMonths;
-      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: currentPrincipal });
-    }
+
+  let int;
+
+  if (n === 1) {
+    // Annual compounding + remaining months = Simple Interest
+    int = currentPrincipal * rate * months / (100 * 12);
+    currentPrincipal += int;
+  } else {
+    const tMonths = months / 12;
+    const amountAfterMonths =
+      currentPrincipal *
+      Math.pow(1 + rate / (100 * n), n * tMonths);
+
+    int = amountAfterMonths - currentPrincipal;
+    currentPrincipal = amountAfterMonths;
+  }
+
+  rows.push({
+    label: `${months} Month${months>1?'s':''}`,
+    interest: int,
+    amount: currentPrincipal
+  });
+}
     
     // Bache hue dino (Days) ka compounding update
     if (days > 0) {
-      const tDays = days / 365;
-      const amountAfterDays = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tDays);
-      const int = amountAfterDays - currentPrincipal;
-      currentPrincipal = amountAfterDays;
-      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: currentPrincipal });
-    }
-    
+
+  let int;
+
+  if (n === 1) {
+    // Annual compounding + remaining days = Simple Interest
+    int = currentPrincipal * rate * days / (100 * 365);
+    currentPrincipal += int;
+  } else {
+    const tDays = days / 365;
+
+    const amountAfterDays =
+      currentPrincipal *
+      Math.pow(1 + rate / (100 * n), n * tDays);
+
+    int = amountAfterDays - currentPrincipal;
+    currentPrincipal = amountAfterDays;
+  }
+
+  rows.push({
+    label: `${days} Day${days>1?'s':''}`,
+    interest: int,
+    amount: currentPrincipal
+  });
+}
     // Agar period sirf kuch dino ka hi ho (no years, no months)
     if (rows.length === 0) {
       const tDays = totalDays / 365;
