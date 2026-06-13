@@ -454,7 +454,7 @@ footer{
 
 <footer class="no-print">
   <p>Developer: <strong style="color:var(--muted)">Rakesh Kumar Dudhawal</strong></p>
-  <p style="margin-top:4px;">SI = PRT/100, Amount = P(1 + RT) &nbsp;|&nbsp; CI = P(1 + R/n)^(nt)-P, Amount = P(1 + R/n)^(nt)</p>
+  <p style="margin-top:4px;">Simple Interest: A = P(1 + RT) &nbsp;|&nbsp; Compound Interest: A = P(1 + R/n)^(nt)</p>
 </footer>
 
 <script>
@@ -508,7 +508,7 @@ function calculate() {
   const endStr     = document.getElementById('end-date').value;
 
   if (!principal || principal <= 0) { showErr('Enter a valid principal amount.'); return; }
-  if (isNaN(rate) || rate < 0)           { showErr('Enter a valid rate of interest.'); return; }
+  if (!rate || rate <= 0)           { showErr('Enter a valid rate of interest.'); return; }
   if (!startStr)                     { showErr('Please select a start date.'); return; }
   if (!endStr)                       { showErr('Please select an end date.'); return; }
 
@@ -536,6 +536,7 @@ function calculate() {
   let totalInterest = 0;
   let finalAmount   = 0;
   const rows        = [];
+  const calculationSteps = [];
 
   if (interestType === 'si') {
     // ── SIMPLE INTEREST (SI) BREAKDOWN ──
@@ -575,64 +576,48 @@ function calculate() {
     
     // 1-1 saal ka compound breakdown
     for (let i = 1; i <= years; i++) {
+      const previousPrincipal = currentPrincipal;
       const amountAfterYear = currentPrincipal * Math.pow(1 + rate / (100 * n), n * 1);
       const int = amountAfterYear - currentPrincipal;
-      currentPrincipal = amountAfterYear; // agle saal ke liye balance update
+      currentPrincipal = amountAfterYear;
+      calculationSteps.push(`<b>Year ${i}</b><br>Interest = ₹${fmt(previousPrincipal)} × ${rate} / 100<br>= ₹${fmt(int)}<br><br>`);
       rows.push({ label: `Year ${i}`, interest: int, amount: currentPrincipal });
     }
     
     // Bache hue mahino (Months) ka compounding update
     if (months > 0) {
-
-  let int;
-
-  if (n === 1) {
-    // Annual compounding + remaining months = Simple Interest
-    int = currentPrincipal * rate * months / (100 * 12);
-    currentPrincipal += int;
-  } else {
-    const tMonths = months / 12;
-    const amountAfterMonths =
-      currentPrincipal *
-      Math.pow(1 + rate / (100 * n), n * tMonths);
-
-    int = amountAfterMonths - currentPrincipal;
-    currentPrincipal = amountAfterMonths;
-  }
-
-  rows.push({
-    label: `${months} Month${months>1?'s':''}`,
-    interest: int,
-    amount: currentPrincipal
-  });
-}
+      let int;
+      const previousPrincipal = currentPrincipal;
+      if (n === 1) {
+        int = currentPrincipal * rate * months / (100 * 12);
+        currentPrincipal += int;
+        calculationSteps.push(`<b>${months} Month${months>1?'s':''}</b><br>Interest = ₹${fmt(previousPrincipal)} × ${rate} × ${months} / (100 × 12)<br>= ₹${fmt(int)}<br><br>`);
+      } else {
+        const tMonths = months / 12;
+        const amountAfterMonths = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tMonths);
+        int = amountAfterMonths - currentPrincipal;
+        currentPrincipal = amountAfterMonths;
+      }
+      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: currentPrincipal });
+    }
     
     // Bache hue dino (Days) ka compounding update
     if (days > 0) {
-
-  let int;
-
-  if (n === 1) {
-    // Annual compounding + remaining days = Simple Interest
-    int = currentPrincipal * rate * days / (100 * 365);
-    currentPrincipal += int;
-  } else {
-    const tDays = days / 365;
-
-    const amountAfterDays =
-      currentPrincipal *
-      Math.pow(1 + rate / (100 * n), n * tDays);
-
-    int = amountAfterDays - currentPrincipal;
-    currentPrincipal = amountAfterDays;
-  }
-
-  rows.push({
-    label: `${days} Day${days>1?'s':''}`,
-    interest: int,
-    amount: currentPrincipal
-  });
-}
+      let int;
+      const previousPrincipal = currentPrincipal;
+      if (n === 1) {
+        int = currentPrincipal * rate * days / (100 * 365);
+        currentPrincipal += int;
+        calculationSteps.push(`<b>${days} Day${days>1?'s':''}</b><br>Interest = ₹${fmt(previousPrincipal)} × ${rate} × ${days} / (100 × 365)<br>= ₹${int.toFixed(4)}<br>≈ ₹${fmt(int)}<br><br>`);
+      } else {
+        const tDays = days / 365;
+        const amountAfterDays = currentPrincipal * Math.pow(1 + rate / (100 * n), n * tDays);
+        int = amountAfterDays - currentPrincipal;
+        currentPrincipal = amountAfterDays;
+      }
+      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: currentPrincipal });
+    }
+    
     // Agar period sirf kuch dino ka hi ho (no years, no months)
     if (rows.length === 0) {
       const tDays = totalDays / 365;
@@ -644,22 +629,8 @@ function calculate() {
     finalAmount = currentPrincipal;
     totalInterest = finalAmount - principal;
 
-    const timeYears = ((endDate - startDate) / (1000 * 60 * 60 * 24) / 365).toFixed(4);
-
-document.getElementById('ci-note').innerHTML = ` <strong>Compound Interest Details</strong><br><br>
-
-Principal (P): ₹${fmt(principal)}<br>
-Rate (R): ${rate}% per annum<br>
-Compounding Frequency: ${freqLabel}<br>
-Time (t): ${timeYears} years<br><br>
-
-Formula:<br>
-A = P(1 + R/n)<sup>nt</sup><br><br>
-
-Applied Formula:<br>
-A = ${fmt(principal)} × (1 + ${rate}/(100 × ${n}))<sup>${n} × ${timeYears}</sup>
-`;
-
+    document.getElementById('ci-note').innerHTML =
+      `<strong>Calculation Breakdown</strong><br><br>${calculationSteps.join('')}<hr style="margin:10px 0">Total Interest : ₹${fmt(totalInterest)}<br>Final Amount : ₹${fmt(finalAmount)}`;
     document.getElementById('ci-note').style.display = 'block';
   }
 
