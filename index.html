@@ -394,7 +394,6 @@ footer{
       <button class="btn-calc" onclick="calculate()">Calculate Interest ↗</button>
     </div>
 
-    <!-- RESULT -->
     <div class="result-section" id="result-section">
 
       <div class="card">
@@ -431,7 +430,7 @@ footer{
               <tr>
                 <th>Period</th>
                 <th>Interest (₹)</th>
-                <th>Amount (₹)</th>
+                <th>Cumulative Amount (₹)</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -510,8 +509,8 @@ function calculate() {
 
   if (!principal || principal <= 0) { showErr('Enter a valid principal amount.'); return; }
   if (!rate || rate <= 0)           { showErr('Enter a valid rate of interest.'); return; }
-  if (!startStr)                    { showErr('Please select a start date.'); return; }
-  if (!endStr)                      { showErr('Please select an end date.'); return; }
+  if (!startStr)                     { showErr('Please select a start date.'); return; }
+  if (!endStr)                       { showErr('Please select an end date.'); return; }
 
   const startDate = new Date(startStr);
   const endDate   = new Date(endStr);
@@ -539,33 +538,36 @@ function calculate() {
   const rows        = [];
 
   if (interestType === 'si') {
-    let running = principal;
+    // 1-1 saal ka pure breakdown bina principal badle
+    let runningInterest = 0;
 
     for (let i = 1; i <= years; i++) {
-      const int = (running * rate) / 100;
-      totalInterest += int;
-      running += int;
-      rows.push({ label: `Year ${i}`, interest: int, amount: running });
+      const int = (principal * rate) / 100; // Har saal interest sirf main principal par hi nikalega
+      runningInterest += int;
+      rows.push({ label: `Year ${i}`, interest: int, amount: principal + runningInterest });
     }
     if (months > 0) {
-      const int = (running * rate * months) / (100 * 12);
-      totalInterest += int; running += int;
-      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: running });
+      const int = (principal * rate * months) / (100 * 12);
+      runningInterest += int;
+      rows.push({ label: `${months} Month${months>1?'s':''}`, interest: int, amount: principal + runningInterest });
     }
     if (days > 0) {
-      const int = (running * rate * days) / (100 * 365);
-      totalInterest += int; running += int;
-      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: running });
+      const int = (principal * rate * days) / (100 * 365);
+      runningInterest += int;
+      rows.push({ label: `${days} Day${days>1?'s':''}`, interest: int, amount: principal + runningInterest });
     }
     if (rows.length === 0) {
       const int = (principal * rate * totalDays) / (100 * 365);
-      totalInterest = int; running = principal + int;
-      rows.push({ label: `${totalDays} Days`, interest: int, amount: running });
+      runningInterest = int;
+      rows.push({ label: `${totalDays} Days`, interest: int, amount: principal + runningInterest });
     }
-    finalAmount = running;
+    
+    totalInterest = runningInterest;
+    finalAmount = principal + totalInterest;
     document.getElementById('ci-note').style.display = 'none';
 
   } else {
+    // Compound Interest Section
     const n = parseInt(document.getElementById('compound-freq').value);
     const t = totalDays / 365;
     finalAmount   = principal * Math.pow(1 + rate / (100 * n), n * t);
@@ -579,12 +581,22 @@ function calculate() {
     document.getElementById('ci-note').style.display = 'block';
   }
 
+  // Rows ko table mein append karna
   rows.forEach((r, idx) => {
     const tr = document.createElement('tr');
-    if (idx === rows.length - 1) tr.classList.add('highlight-row');
     tr.innerHTML = `<td>${r.label}</td><td>₹${fmt(r.interest)}</td><td>₹${fmt(r.amount)}</td>`;
     tbody.appendChild(tr);
   });
+
+  // Extra Row: Jo Total summary ko saaf breakdown karke dikhaye
+  if (rows.length > 1) {
+    const totalTr = document.createElement('tr');
+    totalTr.classList.add('highlight-row');
+    totalTr.innerHTML = `<td><strong>Total Breakdown</strong></td><td><strong>₹${fmt(totalInterest)}</strong></td><td><strong>₹${fmt(finalAmount)}</strong></td>`;
+    tbody.appendChild(totalTr);
+  } else if (rows.length === 1) {
+    tbody.rows[0].classList.add('highlight-row');
+  }
 
   document.getElementById('r-principal').textContent = '₹' + fmt(principal);
   document.getElementById('r-interest').textContent  = '₹' + fmt(totalInterest);
